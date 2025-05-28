@@ -226,6 +226,37 @@ FORCE_EXPORT_SYM(getpeername);
 FORCE_EXPORT_SYM(inet_ntop);
 #endif
 
+#if defined(CONFIG_MQTT_LIB)
+FORCE_EXPORT_SYM(mqtt_client_init)
+
+#if defined(CONFIG_SOCKS)
+FORCE_EXPORT_SYM(mqtt_client_set_proxy);
+#endif
+
+FORCE_EXPORT_SYM(mqtt_connect)
+FORCE_EXPORT_SYM(mqtt_publish)
+FORCE_EXPORT_SYM(mqtt_publish_qos1_ack)
+FORCE_EXPORT_SYM(mqtt_publish_qos2_receive)
+FORCE_EXPORT_SYM(mqtt_publish_qos2_release)
+FORCE_EXPORT_SYM(mqtt_publish_qos2_complete)
+FORCE_EXPORT_SYM(mqtt_subscribe)
+FORCE_EXPORT_SYM(mqtt_unsubscribe)
+FORCE_EXPORT_SYM(mqtt_ping)
+FORCE_EXPORT_SYM(mqtt_disconnect)
+
+#if defined(CONFIG_MQTT_VERSION_5_0)
+FORCE_EXPORT_SYM(mqtt_auth)
+#endif // CONFIG_MQTT_VERSION_5_0
+
+FORCE_EXPORT_SYM(mqtt_abort)
+FORCE_EXPORT_SYM(mqtt_live)
+FORCE_EXPORT_SYM(mqtt_keepalive_time_left)
+FORCE_EXPORT_SYM(mqtt_input)
+FORCE_EXPORT_SYM(mqtt_read_publish_payload)
+FORCE_EXPORT_SYM(mqtt_read_publish_payload_blocking)
+FORCE_EXPORT_SYM(mqtt_readall_publish_payload)
+#endif // CONFIG_MQTT_LIB
+
 #if defined(CONFIG_CDC_ACM_DTE_RATE_CALLBACK_SUPPORT)
 FORCE_EXPORT_SYM(cdc_acm_dte_rate_callback_set);
 #endif
