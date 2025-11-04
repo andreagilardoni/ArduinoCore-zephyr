@@ -1,3 +1,4 @@
+#ifndef ESP_PLATFORM
 #include <cmsis_core.h>
 #include <zephyr/init.h>
 
@@ -246,3 +247,5 @@ int disable_vrefbuf() {
 
 SYS_INIT(disable_vrefbuf, POST_KERNEL, 0);
 #endif
+
+#endif // ESP_PLATFORM
