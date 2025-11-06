@@ -621,10 +621,13 @@ nano_nora.build.architecture=esp32s3
 # TODO unrecognized command-line option
 # nano_nora.build.float-abi=-mfloat-abi=hard
 nano_nora.build.extra_flags=
+nano_nora.build.extra_ldflags=
 nano_nora.build.postbuild.cmd="{tools.imgtool.path}/{tools.imgtool.cmd}" exit
 nano_nora.build.architecture=esp32s3
 nano_nora.build.board=nano_nora
 
+nano_nora.tools.esptool_py.program.pattern_args=--chip {build.mcu} --port "{serial.port}" --before default_reset --after hard_reset write_flash -z --flash_mode {build.flash_mode} --flash_freq {build.flash_freq} --flash_size {build.flash_size} {build.bootloader_addr} "{build.path}/{build.project_name}.bootloader.bin" 0x8000 "{build.path}/{build.project_name}.partitions.bin" 0xe000 "{runtime.platform.path}/tools/partitions/boot_app0.bin" 0xf70000 "{build.variant.path}/extra/nora_recovery/nora_recovery.ino.bin" 0x10000 "{build.path}/{build.project_name}.bin"
+nano_nora.tools.esptool_py.erase.pattern_args=--chip {build.mcu} --port "{serial.port}" --before default_reset --after hard_reset erase_flash
 
 nano_nora.vid.0=0x2341
 nano_nora.pid.0=0x0070
