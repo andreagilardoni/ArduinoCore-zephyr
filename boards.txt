@@ -594,7 +594,8 @@ unoq.bootloader.target=stm32u585zitxq
 ##########################################################################################
 
 nano_nora.name=Arduino Nano ESP32
-nano_nora.build.core=esp32
+#nano_nora.build.core=esp32
+nano_nora.build.core=arduino
 nano_nora.build.crossprefix=xtensa-espressif_esp32s3_zephyr-elf-
 # TODO
 # nano_nora.build.compiler_path={runtime.tools.xtensa-espressif_esp32s3_zephyr-elf-0.16.8.path}/bin/
