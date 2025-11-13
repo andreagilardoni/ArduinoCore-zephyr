@@ -7,29 +7,32 @@
 #endif
 
 #include <zephyr/net/socket.h>
+#include <memory>
+#include <cstring>
 
 class ZephyrSocketWrapper {
 protected:
-	int* sock_fd = nullptr;
+	std::shared_ptr<int> sock_fd;
 	bool is_ssl = false;
 	int ssl_sock_temp_char = -1;
 
+	// custom deleter for shared_ptr to close automatically the socket
+	static auto socket_deleter() {
+		return [](int *fd) {
+			if (fd && *fd != -1) {
+				::close(*fd);
+				delete fd;
+			}
+		};
+	}
+
 public:
-	ZephyrSocketWrapper() {
-		sock_fd = new int(-1);
+	ZephyrSocketWrapper() = default;
+
+	ZephyrSocketWrapper(int fd) : sock_fd(std::shared_ptr<int>(fd<0 ? nullptr : new int(fd), socket_deleter())) {
 	}
 
-	ZephyrSocketWrapper(int fd) {
-		sock_fd = new int(fd);
-	}
-
-	~ZephyrSocketWrapper() {
-		if (sock_fd && *sock_fd != -1) {
-			::close(*sock_fd);
-		}
-		delete sock_fd;
-		sock_fd = nullptr;
-	}
+	~ZephyrSocketWrapper() = default; // socket close managed by shared_ptr
 
 	bool connect(const char *host, uint16_t port) {
 
@@ -37,6 +40,7 @@ public:
 		struct addrinfo hints = {0};
 		struct addrinfo *res = nullptr;
 		bool rv = true;
+		int raw_sock_fd;
 
 		hints.ai_family = AF_INET;
 		hints.ai_socktype = SOCK_STREAM;
@@ -59,7 +63,8 @@ public:
 			goto exit;
 		}
 
-		*sock_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+		raw_sock_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+		sock_fd = std::shared_ptr<int>(raw_sock_fd < 0 ? nullptr : new int(raw_sock_fd), socket_deleter());
 		if (!sock_fd || *sock_fd < 0) {
 			rv = false;
 
@@ -85,13 +90,15 @@ public:
 	bool connect(IPAddress host, uint16_t port) {
 
 		const char *_host = host.toString().c_str();
+		int raw_sock_fd;
 
 		struct sockaddr_in addr;
 		addr.sin_family = AF_INET;
 		addr.sin_port = htons(port);
 		inet_pton(AF_INET, _host, &addr.sin_addr);
 
-		*sock_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+		raw_sock_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+		sock_fd = std::shared_ptr<int>(raw_sock_fd < 0 ? nullptr : new int(raw_sock_fd), socket_deleter());
 		if (!sock_fd || *sock_fd < 0) {
 			return false;
 		}
@@ -118,6 +125,7 @@ public:
 		int resolve_attempts = 100;
 		int ret;
 		bool rv = false;
+		int raw_sock_fd;
 
 		sec_tag_t sec_tag_opt[] = {
 			CA_CERTIFICATE_TAG,
@@ -150,7 +158,8 @@ public:
 			}
 		}
 
-		*sock_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TLS_1_2);
+		raw_sock_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TLS_1_2);
+		sock_fd = std::shared_ptr<int>(raw_sock_fd < 0 ? nullptr : new int(raw_sock_fd), socket_deleter());
 		if (!sock_fd || *sock_fd < 0) {
 			goto exit;
 		}
@@ -238,11 +247,13 @@ public:
 
 	bool bind(uint16_t port) {
 		struct sockaddr_in addr;
+		int raw_sock_fd;
 		addr.sin_family = AF_INET;
 		addr.sin_port = htons(port);
 		addr.sin_addr.s_addr = INADDR_ANY;
 
-		*sock_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+		raw_sock_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+		sock_fd = std::shared_ptr<int>(raw_sock_fd < 0 ? nullptr : new int(raw_sock_fd), socket_deleter());
 		if (!sock_fd || *sock_fd < 0) {
 			return false;
 		}
