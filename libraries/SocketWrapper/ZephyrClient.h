@@ -11,7 +11,11 @@ private:
 
 protected:
 	void setSocket(int sock) {
-		sock_fd = sock;
+		if (sock_fd) {
+			*sock_fd = sock;
+		} else {
+			sock_fd = new int(sock);
+		}
 		_connected = true;
 	}
 
@@ -42,7 +46,7 @@ public:
 #endif
 	uint8_t connected() override {
 		uint8_t buf;
-		int ret = ::recv(sock_fd, &buf, 1, MSG_PEEK | MSG_DONTWAIT);
+		int ret = ::recv(*sock_fd, &buf, 1, MSG_PEEK | MSG_DONTWAIT);
 		if (ret == 0) {
 			stop();
 		}
@@ -98,7 +102,7 @@ public:
 	}
 
 	operator bool() {
-		return sock_fd != -1;
+		return sock_fd && *sock_fd != -1;
 	}
 
 	String remoteIP() {
