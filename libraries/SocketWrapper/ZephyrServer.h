@@ -36,7 +36,7 @@ public:
 	}
 
 	explicit operator bool() {
-		return sock_fd;
+		return (sock_fd != nullptr);
 	}
 
 	ZephyrClient accept(uint8_t *status = nullptr) {
