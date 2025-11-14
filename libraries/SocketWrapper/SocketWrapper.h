@@ -67,7 +67,7 @@ public:
 		raw_sock_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 		sock_fd = std::shared_ptr<int>(raw_sock_fd < 0 ? nullptr : new int(raw_sock_fd),
 									   socket_deleter());
-		if (!sock_fd || *sock_fd < 0) {
+		if (!sock_fd) {
 			rv = false;
 
 			goto exit;
@@ -101,7 +101,7 @@ public:
 		raw_sock_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 		sock_fd = std::shared_ptr<int>(raw_sock_fd < 0 ? nullptr : new int(raw_sock_fd),
 									   socket_deleter());
-		if (!sock_fd || *sock_fd < 0) {
+		if (!sock_fd) {
 			return false;
 		}
 
@@ -162,7 +162,7 @@ public:
 		raw_sock_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TLS_1_2);
 		sock_fd = std::shared_ptr<int>(raw_sock_fd < 0 ? nullptr : new int(raw_sock_fd),
 									   socket_deleter());
-		if (!sock_fd || *sock_fd < 0) {
+		if (!sock_fd) {
 			goto exit;
 		}
 
@@ -240,7 +240,7 @@ public:
 	}
 
 	void close() {
-		if (sock_fd && *sock_fd != -1) {
+		if (sock_fd) {
 			sock_fd = nullptr;
 		}
 	}
@@ -255,7 +255,7 @@ public:
 		raw_sock_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 		sock_fd = std::shared_ptr<int>(raw_sock_fd < 0 ? nullptr : new int(raw_sock_fd),
 									   socket_deleter());
-		if (!sock_fd || *sock_fd < 0) {
+		if (!sock_fd) {
 			return false;
 		}
 
