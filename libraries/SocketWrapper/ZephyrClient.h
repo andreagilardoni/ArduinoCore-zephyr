@@ -11,7 +11,7 @@ private:
 
 protected:
 	void setSocket(int sock) {
-		sock_fd = std::shared_ptr<int>(sock < 0 ? nullptr : new int(sock), socket_deleter());
+		sock_fd = std::shared_ptr<int>(sock < 0 ? nullptr : new int(sock), socket_deleter);
 		_connected = true;
 	}
 
@@ -98,7 +98,7 @@ public:
 	}
 
 	operator bool() {
-		return sock_fd;
+		return (sock_fd != nullptr);
 	}
 
 	String remoteIP() {
