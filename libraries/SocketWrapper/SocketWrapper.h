@@ -74,8 +74,7 @@ public:
 		}
 
 		if (::connect(*sock_fd, res->ai_addr, res->ai_addrlen) < 0) {
-			::close(*sock_fd);
-			*sock_fd = -1;
+			sock_fd = nullptr;
 			rv = false;
 			goto exit;
 		}
@@ -107,8 +106,7 @@ public:
 		}
 
 		if (::connect(*sock_fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
-			::close(*sock_fd);
-			*sock_fd = -1;
+			sock_fd = nullptr;
 			return false;
 		}
 
@@ -188,8 +186,7 @@ public:
 		}
 
 		if (!rv && *sock_fd >= 0) {
-			::close(*sock_fd);
-			*sock_fd = -1;
+			sock_fd = nullptr;
 		}
 		return rv;
 	}
@@ -244,8 +241,7 @@ public:
 
 	void close() {
 		if (sock_fd && *sock_fd != -1) {
-			::close(*sock_fd);
-			*sock_fd = -1;
+			sock_fd = nullptr;
 		}
 	}
 
@@ -266,8 +262,7 @@ public:
 		zsock_ioctl(*sock_fd, ZFD_IOCTL_FIONBIO);
 
 		if (::bind(*sock_fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
-			::close(*sock_fd);
-			*sock_fd = -1;
+			sock_fd = nullptr;
 			return false;
 		}
 
@@ -280,8 +275,7 @@ public:
 		}
 
 		if (::listen(*sock_fd, backlog) < 0) {
-			::close(*sock_fd);
-			*sock_fd = -1;
+			sock_fd = nullptr;
 			return false;
 		}
 
