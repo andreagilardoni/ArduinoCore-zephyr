@@ -337,3 +337,5 @@ FORCE_EXPORT_SYM(fs_mkfs);
 FORCE_EXPORT_SYM(fs_register);
 FORCE_EXPORT_SYM(fs_unregister);
 #endif
+
+EXPORT_SYMBOL(z_errno_wrap);

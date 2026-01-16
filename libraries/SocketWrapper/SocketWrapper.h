@@ -7,6 +7,10 @@
 #endif
 
 #include <zephyr/net/socket.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <unistd.h>
+#include <arpa/inet.h>
 #include <memory>
 #include <string.h>
 #include <Arduino.h>
