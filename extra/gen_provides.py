@@ -202,11 +202,6 @@ def main():
                 llext_sym_addr = sym['st_value']
                 name = get_str_at(elf, get_ptr_at(elf, llext_sym_addr))
                 value = get_ptr_at(elf, llext_sym_addr + NativePtr.length)
-            elif args.llext and name.startswith("__exported_sym_"):
-                comment = "exported"
-                exported_sym_addr = sym['st_value']
-                name = re.sub("__exported_sym_(.*)", r"\1", name)
-                value = get_ptr_at(elf, exported_sym_addr)
             elif args.regexp and any(map(lambda x: re.match(x, name), args.regexp)):
                 comment = "regexp_sym"
                 value = sym['st_value']
