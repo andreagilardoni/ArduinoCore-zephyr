@@ -53,10 +53,31 @@ const struct device *const usb_dev =
 #if CONFIG_USB_DEVICE_STACK_NEXT
 #include <zephyr/usb/usbd.h>
 struct usbd_context *usbd_init_device(usbd_msg_cb_t msg_cb);
+static struct usbd_context *_usbd = NULL;
+
+int usbd_config_set(struct usbd_context *uds_ctx, uint8_t new_cfg);
+
+int usb_disable() {
+	int err = usbd_disable(_usbd);
+	if (err) {
+		// at least reset the configuration
+		usbd_config_set(_usbd, 0);
+	}
+	usbd_shutdown(_usbd);
+	return err;
+}
+
+static void usb_msg_cb(struct usbd_context *const ctx, const struct usbd_msg *msg) {
+	if (usbd_can_detect_vbus(ctx)) {
+		if (msg->type == USBD_MSG_VBUS_READY) {
+			usbd_enable(ctx);
+		}
+	}
+}
 
 int usb_enable(usb_dc_status_callback status_cb) {
 	int err;
-	struct usbd_context *_usbd = usbd_init_device(NULL);
+	_usbd = usbd_init_device(usb_msg_cb);
 	if (_usbd == NULL) {
 		return -ENODEV;
 	}
@@ -258,6 +279,13 @@ static int loader(const struct shell *sh) {
 #endif
 #endif
 
+#if ZARD_FIRST_SERIAL_IS_SERIALUSB
+		if (debug) {
+			// Disable USB before jumping to sketch
+			usb_disable();
+		}
+#endif
+
 		extern struct k_heap llext_heap;
 		typedef void (*entry_point_t)(struct k_heap *heap, size_t heap_size);
 		entry_point_t entry_point = (entry_point_t)(base_addr + HEADER_LEN + 1);
@@ -341,6 +369,13 @@ static int loader(const struct shell *sh) {
 	k_thread_start(&llext_thread);
 	k_thread_join(&llext_thread, K_FOREVER);
 #else
+
+#if ZARD_FIRST_SERIAL_IS_SERIALUSB
+	if (debug) {
+		// Disable USB before jumping to sketch
+		usb_disable();
+	}
+#endif
 
 #ifdef CONFIG_LLEXT
 	llext_bootstrap(ext, main_fn, NULL);
