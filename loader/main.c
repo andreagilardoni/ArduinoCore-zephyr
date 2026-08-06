@@ -21,7 +21,6 @@ LOG_MODULE_REGISTER(sketch);
 #include <zephyr/drivers/uart.h>
 #include <zephyr/drivers/uart/cdc_acm.h>
 #include <zephyr/drivers/uart.h>
-#include <zephyr/usb/usb_device.h>
 
 #include <zephyr/devicetree/fixed-partitions.h>
 
@@ -57,7 +56,7 @@ static struct usbd_context *_usbd = NULL;
 
 int usbd_config_set(struct usbd_context *uds_ctx, uint8_t new_cfg);
 
-int usb_disable() {
+int loader_usb_disable() {
 	int err = usbd_disable(_usbd);
 	if (err) {
 		// at least reset the configuration
@@ -67,7 +66,7 @@ int usb_disable() {
 	return err;
 }
 
-static void usb_msg_cb(struct usbd_context *const ctx, const struct usbd_msg *msg) {
+static void loader_usb_msg_cb(struct usbd_context *const ctx, const struct usbd_msg *msg) {
 	if (usbd_can_detect_vbus(ctx)) {
 		if (msg->type == USBD_MSG_VBUS_READY) {
 			usbd_enable(ctx);
@@ -75,9 +74,9 @@ static void usb_msg_cb(struct usbd_context *const ctx, const struct usbd_msg *ms
 	}
 }
 
-int usb_enable(usb_dc_status_callback status_cb) {
+int loader_usb_enable(void) {
 	int err;
-	_usbd = usbd_init_device(usb_msg_cb);
+	_usbd = usbd_init_device(loader_usb_msg_cb);
 	if (_usbd == NULL) {
 		return -ENODEV;
 	}
@@ -174,7 +173,7 @@ static int loader(const struct shell *sh) {
 		// disables default shell on UART
 		shell_uninit(shell_backend_uart_get_ptr(), NULL);
 		// enables USB and starts the shell
-		usb_enable(NULL);
+		loader_usb_enable();
 		int dtr;
 		do {
 			// wait for the serial port to open
@@ -186,7 +185,7 @@ static int loader(const struct shell *sh) {
 #elif CONFIG_LOG
 #if !CONFIG_USB_DEVICE_INITIALIZE_AT_BOOT
 	if (debug) {
-		usb_enable(NULL);
+		loader_usb_enable();
 	}
 #endif
 	for (int i = 0; i < log_backend_count_get(); i++) {
@@ -282,7 +281,7 @@ static int loader(const struct shell *sh) {
 #if ZARD_FIRST_SERIAL_IS_SERIALUSB
 		if (debug) {
 			// Disable USB before jumping to sketch
-			usb_disable();
+			loader_usb_disable();
 		}
 #endif
 
@@ -373,7 +372,7 @@ static int loader(const struct shell *sh) {
 #if ZARD_FIRST_SERIAL_IS_SERIALUSB
 	if (debug) {
 		// Disable USB before jumping to sketch
-		usb_disable();
+		loader_usb_disable();
 	}
 #endif
 
