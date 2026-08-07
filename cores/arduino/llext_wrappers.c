@@ -12,6 +12,7 @@
 
 #include <stddef.h>
 #include <stdarg.h>
+#include <sys/time.h>
 
 /* ret func(void) */
 #define W0(ret, name)                                                                              \
@@ -251,6 +252,9 @@ VN(__gnu_thumb1_case_si)
 W1(int, puts, const char *)
 W1(int, putchar, int)
 W4(int, vsnprintf, char *, size_t, const char *, va_list)
+
+/* time.h */
+W2(int, gettimeofday, struct timeval *, void *)
 
 /*
  * Variadic stdio functions cannot be expressed with the tail-call wrapper

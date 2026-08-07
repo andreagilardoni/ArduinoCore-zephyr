@@ -14,6 +14,7 @@
 #include <math.h>
 #include <zephyr/kernel.h>
 #include <time.h>
+#include <sys/time.h>
 #include <zephyr/drivers/pinctrl.h>
 #include <zephyr/device.h>
 #if defined(CONFIG_MBEDTLS)
@@ -338,6 +339,12 @@ EXPORT_SYMBOL(k_work_submit_to_queue);
 // FORCE_EXPORT_SYM(k_timer_start);
 
 EXPORT_SYMBOL(time);
+
+#ifdef CONFIG_XSI_SINGLE_PROCESS
+// Required by time()
+EXPORT_LIBC_SYM(gettimeofday);
+#endif
+
 EXPORT_SYMBOL(sys_clock_settime);
 EXPORT_SYMBOL(mktime);
 EXPORT_SYMBOL(gmtime);
