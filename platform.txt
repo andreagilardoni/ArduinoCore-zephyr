@@ -180,15 +180,18 @@ upload.artifacts.sketch={build.path}/{build.project_name}.{upload.extension}
 # Expects a {loader.cmd} and a {sketch.cmd} to be defined in the tool's
 # section. The loader is flashed if it does not match the current (maybe
 # board-specific) core version. The sketch is then flashed in any case.
-# Extra arguments are passed to the loader command depending on whether
-# the sketch will be flashed in the same session or not.
+# Extra arguments are passed to either command depending on whether the other
+# part will be flashed in the same session or not.
 empty=
 loader.args.with_sketch={empty}
 loader.args.without_sketch={empty}
+sketch.args.with_loader={empty}
+sketch.args.without_loader={empty}
 flash-loader-condition=not eq "v{upload.port.properties.configuration}" "v{version}"
 flash-loader-and-sketch.1=if {flash-loader-condition} {loader.cmd}{loader.args.with_sketch}
-flash-loader-and-sketch.2=run {sketch.cmd}
-tools.patterns.flash-loader-and-sketch="{runtime.tools.scripting-tools.path}/scripting-tools" {flash-loader-and-sketch.1} :: {flash-loader-and-sketch.2}
+flash-loader-and-sketch.2=if {flash-loader-condition} {sketch.cmd}{sketch.args.with_loader}
+flash-loader-and-sketch.3=if not {flash-loader-condition} {sketch.cmd}{sketch.args.without_loader}
+tools.patterns.flash-loader-and-sketch="{runtime.tools.scripting-tools.path}/scripting-tools" {flash-loader-and-sketch.1} :: {flash-loader-and-sketch.2} :: {flash-loader-and-sketch.3}
 tools.patterns.flash-loader-only={loader.cmd}{loader.args.without_sketch}
 
 #
