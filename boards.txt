@@ -443,7 +443,7 @@ portentac33.upload.interface=1
 portentac33.upload.use_1200bps_touch=true
 portentac33.upload.wait_for_upload_port=false
 portentac33.upload.native_usb=true
-portentac33.upload.dfuse=-w
+portentac33.upload.dfuse=
 
 portentac33.bootloader.tool=dfu-util
 portentac33.bootloader.tool.default=dfu-util
@@ -453,8 +453,10 @@ portentac33.bootloader.address=0x10000
 portentac33.bootloader.pid=0x0368
 portentac33.bootloader.dfuse=
 
-# the space before -Q is important
+# the space before the extra arguments is important
 portentac33.leave.dfuse={empty} -Q
+portentac33.loader.args.with_sketch={empty} -w
+portentac33.sketch.args.without_loader={empty} -w
 
 ##########################################################################################
 
