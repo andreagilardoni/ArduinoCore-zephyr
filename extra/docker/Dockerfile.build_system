@@ -4,7 +4,6 @@ ARG BASE_DIR="/arduino"
 
 ENV CORE_LOCATION=${BASE_DIR}/ArduinoCore-zephyr
 ENV ZEPHYR_BASE=${BASE_DIR}/zephyr
-ENV ZEPHYR_SDK_INSTALL_DIR=${BASE_DIR}/zephyr-sdk
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHON_VENV_PATH=${BASE_DIR}/venv
