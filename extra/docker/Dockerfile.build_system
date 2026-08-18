@@ -1,6 +1,5 @@
 FROM ubuntu:26.04
 
-ARG WGET_ARGS="-q --show-progress --progress=bar:force:noscroll"
 ARG BASE_DIR="/arduino"
 
 ENV CORE_LOCATION=${BASE_DIR}/ArduinoCore-zephyr
@@ -17,7 +16,7 @@ RUN <<EOF
 	apt-get -y update
 	apt-get -y upgrade
 
-	apt install -y --no-install-recommends \
+	apt-get install -y --no-install-recommends \
 		git \
 		cmake \
 		xz-utils \
@@ -29,6 +28,7 @@ RUN <<EOF
 		zip \
 		python3-venv \
 		ccache \
+		file \
 		zstd \
 		rsync
 EOF
@@ -62,86 +62,31 @@ EOF
 
 COPY boards.txt ${CORE_LOCATION}
 COPY extra/artifacts/_common.json ${CORE_LOCATION}/extra/artifacts/_common.json
-
-# download the toolchain
-RUN <<EOF
-	get_unique_field_values() {
-		local field="$1"
-		local file="$2"
-		grep "$field=" $file | cut -d '=' -f 2 | xargs -n 1 echo | sort -u | xargs echo
-	}
-
-	NEEDED_TOOLCHAINS=$(get_unique_field_values 'build.zephyr_toolchain' ${CORE_LOCATION}/boards.txt)
-	TOOLCHAIN_VERSIONS=$(for tc in $NEEDED_TOOLCHAINS; do
-		version=$(jq -r --arg name "$tc" '.toolsDependencies[] | select(.name == $name) | .version' ${CORE_LOCATION}/extra/artifacts/_common.json)
-		if [ -z "$version" ]; then
-			echo "No version found for toolchain '$tc' in extra/artifacts/_common.json" >&2
-			exit 1
-		fi
-		echo "$version $tc"
-	done | sort -V)
-
-	for version in $(echo "$TOOLCHAIN_VERSIONS" | cut -d ' ' -f 1 | sort -u -V); do
-		toolchains=$(echo "$TOOLCHAIN_VERSIONS" | awk -v v="$version" '$1 == v { print $2 }')
-		wget ${WGET_ARGS} https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v${version}/zephyr-sdk-${version}_linux-${HOSTTYPE}_minimal.tar.xz
-		tar xf zephyr-sdk-${version}_linux-${HOSTTYPE}_minimal.tar.xz
-		rm zephyr-sdk-${version}_linux-${HOSTTYPE}_minimal.tar.xz
-		mv zephyr-sdk-${version} ${ZEPHYR_SDK_INSTALL_DIR}
-
-		zephyr-sdk/setup.sh -c -t ${toolchains}
-	done
-
-	echo "export TOOLCHAIN_VERSIONS=\"${TOOLCHAIN_VERSIONS}\"" >> ~/.bashrc
-EOF
+COPY extra/bootstrap.sh ${CORE_LOCATION}/extra/
 
 # initialize west project
 RUN <<EOF
 	cd ${CORE_LOCATION}
-
-	get_unique_field_values() {
-		local field="$1"
-		local file="$2"
-		grep "$field=" $file | cut -d '=' -f 2 | xargs -n 1 echo | sort -u | xargs echo
-	}
-
-	NEEDED_HALS=$(get_unique_field_values 'build.zephyr_hals' ${CORE_LOCATION}/boards.txt)
-
-	HAL_FILTER="-hal_.*"
-	for hal in $NEEDED_HALS; do
-		HAL_FILTER="$HAL_FILTER,+$hal"
-	done
-
-	west init -l .
-	west config manifest.project-filter -- "$HAL_FILTER"
-
-	echo "export NEEDED_HALS=\"${NEEDED_HALS}\"" >> ~/.bashrc
-	echo "export HAL_FILTER=\"${HAL_FILTER}\"" >> ~/.bashrc
+	${CORE_LOCATION}/extra/bootstrap.sh west_init
 EOF
 
 # run west update
 RUN <<EOF
-	west update -o=--depth=1 -n
-	west zephyr-export
+	cd ${CORE_LOCATION}
+	${CORE_LOCATION}/extra/bootstrap.sh west_update -o=--depth=1 -n
+EOF
+
+# download the toolchain
+RUN <<EOF
+	cd ${CORE_LOCATION}
+	${CORE_LOCATION}/extra/bootstrap.sh sdk -b ${ZEPHYR_BASE}
 EOF
 
 COPY zephyr/module.yml ${CORE_LOCATION}/zephyr/module.yml
 COPY zephyr/blobs/ArduinoCore-API/LICENSE ${CORE_LOCATION}/zephyr/blobs/ArduinoCore-API/LICENSE
 
+# download blobs
 RUN <<EOF
-	get_unique_field_values() {
-		local field="$1"
-		local file="$2"
-		grep "$field=" $file | cut -d '=' -f 2 | xargs -n 1 echo | sort -u | xargs echo
-	}
-
-	NEEDED_HALS=$(get_unique_field_values 'build.zephyr_hals' ${CORE_LOCATION}/boards.txt)
-
-	NEEDED_HALS="arduino-api ${NEEDED_HALS}"
-
-	echo "west blobs fetch --auto-accept ${NEEDED_HALS} "
-	west blobs fetch --auto-accept ${NEEDED_HALS}
+	cd ${CORE_LOCATION}
+	${CORE_LOCATION}/extra/bootstrap.sh blobs --auto-accept
 EOF
-
-# RUN <<EOF
-# 	cp -r ${CORE_LOCATION}/zephyr/blobs/ArduinoCore-API/ ${BASE_DIR}
-# EOF
