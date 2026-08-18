@@ -21,10 +21,6 @@ env:
   # use the head SHA for PR hashes, instead of the merge commit
   HEAD_REF: ${{ github.event.pull_request.head.sha || github.ref }}
 
-defaults:
-  run:
-    shell: bash
-
 jobs:
   build-loader-docker:
     uses: ./.github/workflows/docker_build.yml
