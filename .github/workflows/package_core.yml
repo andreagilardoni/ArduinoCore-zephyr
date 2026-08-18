@@ -179,6 +179,8 @@ jobs:
           ln -s $PWD ${CORE_LOCATION}
           cd ${CORE_LOCATION}
 
+          git config --global --add safe.directory "${CORE_LOCATION}"
+
       - name: Build loader
         id: build-loader
         shell: bash
