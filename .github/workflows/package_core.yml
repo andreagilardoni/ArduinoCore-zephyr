@@ -129,15 +129,6 @@ jobs:
           path: test-data/
           retention-days: 1
 
-      - name: Archive build environment
-        uses: actions/upload-artifact@v7
-        with:
-          name: build-env
-          path: ~/build-env.tar.zstd
-          retention-days: 1
-          archive: false
-
-
 
   # Extract the build environment and compile the loader project for each board
   # in parallel. The build logs and artifacts are intermediate results archived
