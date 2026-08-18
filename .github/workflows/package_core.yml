@@ -165,7 +165,6 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
           fetch-tags: true # needed for get_core_version.sh
-          clean: false
 
       - name: ccache
         uses: actions/cache@v5
@@ -173,19 +172,19 @@ jobs:
           key: ${{ github.job }}-${{ matrix.board }} # independent caches
           path: ~/.cache/ccache
 
+      - name: Prepare build env
+        run: |
+          cp -r ${CORE_LOCATION}/zephyr/blobs/ zephyr/
+          rm -rf ${CORE_LOCATION}
+          ln -s $PWD ${CORE_LOCATION}
+          cd ${CORE_LOCATION}
+
       - name: Build loader
         id: build-loader
         shell: bash
         run: |
           # create the report directory
           mkdir -p reports
-
-          cp -r ${CORE_LOCATION}/zephyr/blobs/ zephyr/
-          rm -rf ${CORE_LOCATION}
-          ln -s $PWD ${CORE_LOCATION}
-          cd ${CORE_LOCATION}
-          git config --global --add safe.directory "${CORE_LOCATION}"
-          git config --global --add safe.directory "${{ github.workspace }}"
 
           echo "::group::ccache stats before build"
           ccache --show-stats
@@ -229,7 +228,7 @@ jobs:
           ls reports/* >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
-          # Preprare an archive of the built binaries (and build dir on failure)
+          # Preparare an archive of the built binaries (and build dir on failure)
           [ "${{ job.status }}" == "failure" ] && FULL_BUILD_DIR="build/${{ matrix.variant }}/"
           sed -e '/^#/d' boards.local.txt > boards.local_${{ matrix.variant }}.txt
           tar chf - \
@@ -279,7 +278,7 @@ jobs:
       matrix:
         artifact: ${{ fromJSON( needs.build-env.outputs.ARTIFACTS ) }}
       fail-fast: false
-    if: ${{ !cancelled() && needs.build-env.result == 'success' && needs.build-board.result == 'success' }}
+    if: ${{ !cancelled() && needs.build-board.result == 'success' }}
     steps:
 
       - uses: actions/checkout@v6
@@ -450,7 +449,7 @@ jobs:
       CORE_ARTIFACT: ArduinoCore-${{ matrix.artifact }}-${{ needs.build-env.outputs.CORE_HASH }}.tar.bz2
       ARTIFACT_TAG: ${{ needs.build-env.outputs.CORE_HASH }}-${{ matrix.board }}-${{ matrix.link_mode }}
       CI_BUILDS_URL: ${{ needs.build-env.outputs.CI_BUILDS_URL }}
-    if: ${{ !cancelled() && needs.build-env.result == 'success'  && needs.package-core.result == 'success' }}
+    if: ${{ !cancelled() && needs.package-core.result == 'success' }}
     steps:
 
       # only needs the test list generator and artifact information
@@ -531,7 +530,7 @@ jobs:
       - build-env
       - package-core
       - test-core
-    if: ${{ !cancelled() && needs.test-core.result == 'success'  }}
+    if: ${{ !cancelled() }}
     env:
       ALL_BOARD_DATA: ${{ needs.build-env.outputs.ALL_BOARD_DATA }}
       CORE_VER: ${{ needs.build-env.outputs.CORE_VER }}
