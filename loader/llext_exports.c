@@ -596,3 +596,8 @@ EXPORT_SYMBOL(nvs_mount);
 #include <zephyr/sys/crc.h>
 EXPORT_SYMBOL(crc32_ieee_update);
 #endif
+
+#ifdef CONFIG_BOARD_ARDUINO_OPTA
+#include <board.h>
+EXPORT_SYMBOL(opta_get_board_info);
+#endif
