@@ -620,3 +620,56 @@ int system_utilities(void) {
 SYS_INIT(system_utilities, APPLICATION, CONFIG_APPLICATION_INIT_PRIORITY);
 
 #endif
+
+#if defined(CONFIG_BOARD_ARDUINO_OPTA) && DT_HAS_COMPAT_STATUS_OKAY(ethernet_phy)
+
+#include <board.h>
+#include <zephyr/net/net_if.h>
+#include <zephyr/net/ethernet.h>
+#include <zephyr/net/ethernet_mgmt.h>
+
+int opta_set_eth_macaddress(void) {
+	const struct opta_board_info *info = opta_get_board_info();
+
+	if (info == NULL || info->magic != OPTA_OTP_MAGIC) {
+		printk("board info null or magic not matching\n");
+		return 0;
+	}
+
+	// Reject an all-zero or all-FF address rather than applying garbage
+	bool allZero = true, allFF = true;
+	for (int i = 0; i < 6; i++) {
+		allZero &= (info->mac_address[i] == 0x00);
+		allFF   &= (info->mac_address[i] == 0xFF);
+	}
+	if (allZero || allFF) {
+		printk("invalid mac address\n");
+		return 0;
+	}
+
+	struct net_if *iface = net_if_get_first_by_type(&NET_L2_GET_NAME(ETHERNET));
+	if (iface == NULL) {
+		printk("no net iface defined\n");
+		return 0;
+	}
+
+	struct ethernet_req_params params = {};
+	memcpy(params.mac_address.addr, info->mac_address, sizeof(params.mac_address.addr));
+
+	bool wasUp = net_if_is_admin_up(iface);
+	if (wasUp) {
+		net_if_down(iface);
+	}
+	int rc = net_mgmt(NET_REQUEST_ETHERNET_SET_MAC_ADDRESS, iface, &params, sizeof(params));
+	if (rc) {
+		printk("Setting MAC failed: %d\n", rc);
+	}
+	if (wasUp) {
+		net_if_up(iface);
+	}
+	return 0;
+}
+
+SYS_INIT(opta_set_eth_macaddress, APPLICATION, CONFIG_APPLICATION_INIT_PRIORITY);
+
+#endif // defined(CONFIG_BOARD_ARDUINO_OPTA)
